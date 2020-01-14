@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import random
+from random import randint
 from time import sleep
 import turtle
 
@@ -28,21 +29,21 @@ class GameBoard:
         if self.grid[row][col] < 0:
             print("Can't change this number!")
         elif self.grid[row][col] == 0:
-            pritn("Number added successfuly!")
+            pritn("Number added successfully!")
 
 
     def checkBoxesForDuplicates(self):
         boxes = [[0,0], [0,3], [0,6],
                 [3,0], [3,3], [3,6],
                 [6,0], [6,3], [6,6]]
-        #helper function to check for a duplicate inside a spesific box
+        #helper function to check for a duplicate inside a specific box
         def boxHasDuplicate(self, start):
             end_row = start[0] + 3
             end_col = start[1] + 3
             nums = [0]*9
             for row in range(start[0], end_row):
                 for col in range(start[1], end_col):
-                    #allows me to call a function, check puzzel so far
+                    #allows me to call a function, check puzzle so far
                     if self.grid[row][col] != 0:
                         if nums[self.grid[row][col] - 1] == 1:
                             return True
@@ -57,11 +58,11 @@ class GameBoard:
 
 
     def checkColsForDuplicates(self):
-        #helper function to check for duplicates inside a colomn
+        #helper function to check for duplicates inside a colon
         def colHasDuplicate(self, col):
             nums = [0]*9
             for row in range(9):
-                #allows me to call a function, check puzzel so far
+                #allows me to call a function, check puzzle so far
                 if self.grid[row][col] != 0:
                     if nums[self.grid[row][col] - 1] == 1:
                         return True
@@ -87,7 +88,7 @@ class GameBoard:
             return False
 
         for row in range(9):
-            # allows me to call a function, check puzzel so far
+            # allows me to call a function, check puzzle so far
             if rowHasDuplicates(self, row):
                 return False
         return True
@@ -145,7 +146,7 @@ class GameBoard:
                 if self.grid[row][col] == 0:
                     random.shuffle(possibleVals)
                     for val in possibleVals:
-                        #if the value fitts the positon requirements aka single digit in its 
+                        #if the value fits the position requirements aka single digit in its 
                         # row, in its col, and in its box
                         if val not in self.grid[row] and not self.valDuplicatesInCol(val, col) and not self.valDuplicatesInBox(val, row, col):
                             self.grid[row][col] = val
@@ -162,11 +163,86 @@ class GameBoard:
         fillBoard(self)
 
 
+    def findNumberSolutions(self):
+        #Backtrack Function to get correct combination of numbers
+        global count
+        count = 0
+        print(count)
+        def solveBoard(self):
+            global count
+            possibleVals = [1,2,3,4,5,6,7,8,9]
+            #there are 81 positions in the matrix to be populated
+            for i in range(0 ,81):
+                row = i // 9
+                col = i % 9
+                #if empty position try to find a fitting value
+                if self.grid[row][col] == 0:
+                    #random.shuffle(possibleVals)
+                    for val in possibleVals:
+                        #if the value fits the position requirements aka single digit in its 
+                        # row, in its col, and in its box
+                        if val not in self.grid[row] and not self.valDuplicatesInCol(val, col) and not self.valDuplicatesInBox(val, row, col):
+                            self.grid[row][col] = val
+                            #if the grid is full, we are done
+                            if self.checkIfBoardFull():
+                                count += 1
+                                break
+                            # go to another random position
+                            elif solveBoard(self):
+                                return True
+                    break
+            #if non of the values fit at a position aka the value is False
+            self.grid[row][col] = 0
+
+        solveBoard(self)
+        return count
+
+
+    def createLevel(self):
+        #Start Removing Numbers one by one
+        #A higher number of attempts will end up removing more numbers from the grid
+        #Potentially resulting in more difficult grids to solve!
+        attempts = 3
+        while attempts > 0:
+            #Select a random cell that is not already empty
+            row = randint(0,8)
+            col = randint(0,8)
+            while self.grid[row][col] == 0:
+                row = randint(0,8)
+                col = randint(0,8)
+            #Remember its cell value in case we need to put it back  
+            backup = self.grid[row][col]
+            self.grid[row][col] = 0
+          
+            self.printBoard()
+            #Take a full copy of the grid
+            copyGrid = []
+            for r in range(0,9):
+                copyGrid.append([])
+                for c in range(0,9):
+                    copyGrid[r].append(self.grid[r][c])
+            
+            #Count the number of solutions that this grid has (using a backtracking approach implemented in the solveGrid() function)
+            counter = self.findNumberSolutions()
+            print("Count: " + str(counter))
+            #copy original board back to self
+            self.copyBoard(copyGrid)
+            #If the number of solution is different from 1 then we need to cancel the change by putting the value we took away back in the grid
+            if counter != 1:
+                self.grid[row][col]=backup
+                #We could stop here, but we can also have another attempt with a different cell just to try to remove more numbers
+                attempts -= 1
+            myPen.clear()
+            drawGrid(self.grid) 
+            myPen.getscreen().update()
+
+
 ###     TEMPORARY SOLUTION FOR VISUALIZATION (Will use a different tool to create a better design)
 ##############################################################################
 #code snipped from "https://www.101computing.net/sudoku-generator-algorithm/""
 ##############################################################################
 myPen = turtle.Turtle()
+turtle.tracer(0)
 myPen.speed(0)
 myPen.color("#000000")
 myPen.hideturtle()
@@ -211,13 +287,16 @@ def drawGrid(grid):
 
 
 def main():
-    # Test the graphics visiulization
+    # Test the graphics visualization
     sudoku2 = GameBoard()
     sudoku2.generateFullBoard()
     drawGrid(sudoku2.grid)
     myPen.getscreen().update()
-    sleep(15)
+    sleep(2)
+    sudoku2.createLevel()
 
+    print("Sudoku Grid Ready")
+    sleep(15)
 
     #### TEST sudoku copyBoeard(grid) function ###########
     # grid = [[3,1,6,5,7,8,4,9,2],
@@ -248,6 +327,6 @@ def main():
     # print("Print time:")
     # print("--- %s seconds ---" % (time.time() - start_time) + " " + str(N)+ "# Tests Ran!")
     ################ END TEST #############################
-    print("The game is in develepment stage!")
+    print("The game is in development stage!")
     return 0
 main()
