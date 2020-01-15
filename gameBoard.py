@@ -5,7 +5,7 @@ from time import sleep
 import turtle
 
 
-class GameBoard:
+class gameBoard:
     def __init__(self):
         self.grid = [[0 for x in range(9)] for y in range(9)]
 
@@ -288,7 +288,7 @@ def drawGrid(grid):
 
 def main():
     # Test the graphics visualization
-    sudoku2 = GameBoard()
+    sudoku2 = gameBoard()
     sudoku2.generateFullBoard()
     drawGrid(sudoku2.grid)
     myPen.getscreen().update()
